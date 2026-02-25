@@ -86,14 +86,6 @@ export function TodoSidebar({ activeCategory, onCategoryChange, counts }: TodoSi
         </div>
       </div>
 
-      <div className="mt-auto pt-4 border-t border-border">
-        <div className="rounded-lg bg-secondary/50 p-4">
-          <p className="text-sm font-medium text-foreground">Pro Tip</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-foreground text-xs">Ctrl + N</kbd> to quickly add a new task
-          </p>
-        </div>
-      </div>
     </aside>
   );
 }

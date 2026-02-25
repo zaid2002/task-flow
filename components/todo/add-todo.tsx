@@ -3,7 +3,7 @@
 import React from "react"
 
 import { useState } from "react";
-import { Plus, Calendar, Tag, Star } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, Tag, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,9 +12,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, isToday, isTomorrow, startOfDay } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface AddTodoProps {
-  onAdd: (title: string, important: boolean, tag?: { name: string; color: string }) => void;
+  onAdd: (title: string, important: boolean, dueDate?: string, tag?: { name: string; color: string }) => void;
 }
 
 const tagOptions = [
@@ -27,17 +31,26 @@ export function AddTodo({ onAdd }: AddTodoProps) {
   const [title, setTitle] = useState("");
   const [isImportant, setIsImportant] = useState(false);
   const [selectedTag, setSelectedTag] = useState<{ name: string; color: string } | null>(null);
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim()) {
-      onAdd(title.trim(), isImportant, selectedTag || undefined);
+      onAdd(title.trim(), isImportant, dueDate ? format(dueDate, "yyyy-MM-dd") : undefined, selectedTag || undefined);
       setTitle("");
       setIsImportant(false);
       setSelectedTag(null);
+      setDueDate(undefined);
       setIsExpanded(false);
     }
+  };
+
+  const formatDueDate = (date: Date) => {
+    if (isToday(date)) return "Today";
+    if (isTomorrow(date)) return "Tomorrow";
+    return format(date, "MMM d");
   };
 
   return (
@@ -58,13 +71,43 @@ export function AddTodo({ onAdd }: AddTodoProps) {
         {isExpanded && (
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary transition-colors"
-              >
-                <Calendar className="h-3.5 w-3.5" />
-                Due date
-              </button>
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors",
+                      dueDate
+                        ? "text-primary bg-primary/10"
+                        : "text-muted-foreground hover:bg-secondary"
+                    )}
+                  >
+                    <CalendarIcon className="h-3.5 w-3.5" />
+                    {dueDate ? formatDueDate(dueDate) : "Due date"}
+                    {dueDate && (
+                      <X
+                        className="h-3 w-3 ml-1 hover:text-primary transition-colors cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDueDate(undefined);
+                        }}
+                      />
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dueDate}
+                    onSelect={(date) => {
+                      setDueDate(date);
+                      setIsCalendarOpen(false);
+                    }}
+                    disabled={(date) => date < startOfDay(new Date())}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -92,11 +135,10 @@ export function AddTodo({ onAdd }: AddTodoProps) {
               <button
                 type="button"
                 onClick={() => setIsImportant(!isImportant)}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
-                  isImportant
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${isImportant
                     ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:bg-secondary"
-                }`}
+                  }`}
               >
                 <Star className={`h-3.5 w-3.5 ${isImportant ? "fill-current" : ""}`} />
                 Important
@@ -113,6 +155,7 @@ export function AddTodo({ onAdd }: AddTodoProps) {
                   setTitle("");
                   setIsImportant(false);
                   setSelectedTag(null);
+                  setDueDate(undefined);
                 }}
                 className="text-muted-foreground"
               >

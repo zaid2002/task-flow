@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Star, Trash2, Calendar, MoreHorizontal, ChevronRight, ListTodo, Edit2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format, isToday, isBefore, startOfDay, parseISO } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -122,9 +123,19 @@ export function TodoItem({ todo, onToggle, onToggleImportant, onDelete, onEdit, 
             </span>
           )}
           {todo.dueDate && (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span className={cn(
+              "flex items-center gap-1 text-xs",
+              (todo.dueDate === "Today" || (todo.dueDate.includes("-") && isToday(parseISO(todo.dueDate))))
+                ? "text-primary"
+                : (todo.dueDate !== "Today" && todo.dueDate.includes("-") && isBefore(parseISO(todo.dueDate), startOfDay(new Date())))
+                  ? "text-destructive"
+                  : "text-muted-foreground"
+            )}>
               <Calendar className="h-3 w-3" />
-              {todo.dueDate}
+              {todo.dueDate.includes("-")
+                ? format(parseISO(todo.dueDate), "MMM d")
+                : todo.dueDate
+              }
             </span>
           )}
           {todo.tag && (

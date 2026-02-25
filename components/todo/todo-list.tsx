@@ -20,7 +20,7 @@ interface TodoListProps {
   onToggleImportant: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (id: string, newTitle: string) => void;
-  onAdd: (title: string, important: boolean, tag?: { name: string; color: string }) => void;
+  onAdd: (title: string, important: boolean, dueDate?: string, tag?: { name: string; color: string }) => void;
   onOpenSubtasks: (id: string) => void;
 }
 

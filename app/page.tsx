@@ -86,7 +86,7 @@ const initialTodos: Todo[] = [
     title: "Update portfolio website",
     completed: false,
     important: false,
-    dueDate: "Feb 1",
+    dueDate: "2024-02-01",
     tag: { name: "Personal", color: "bg-chart-2/20 text-chart-2" },
   },
 ];
@@ -170,6 +170,7 @@ export default function TodoApp() {
   const handleAdd = async (
     title: string,
     important: boolean,
+    dueDate?: string,
     tag?: { name: string; color: string }
   ) => {
     if (!user) return;
@@ -177,6 +178,7 @@ export default function TodoApp() {
       title,
       completed: false,
       important,
+      dueDate: dueDate || null,
       tag: tag || null, // data validation
       subtasks: [],
       userId: user.uid,
@@ -241,11 +243,12 @@ export default function TodoApp() {
 
   // Filter todos based on category
   const categoryFilteredTodos = todos.filter((todo) => {
+    const todayStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
     switch (activeCategory) {
       case "today":
-        return todo.dueDate === "Today";
+        return todo.dueDate === todayStr || todo.dueDate === "Today"; // Handle old hardcoded value just in case
       case "upcoming":
-        return todo.dueDate && !todo.completed;
+        return todo.dueDate && !todo.completed && todo.dueDate !== todayStr && todo.dueDate !== "Today";
       case "important":
         return todo.important;
       default:
@@ -256,8 +259,14 @@ export default function TodoApp() {
 
   const counts = {
     inbox: todos.filter((t) => !t.completed).length,
-    today: todos.filter((t) => !t.completed && t.dueDate === "Today").length,
-    upcoming: todos.filter((t) => !t.completed && t.dueDate).length,
+    today: todos.filter((t) => {
+      const todayStr = new Date().toISOString().split("T")[0];
+      return !t.completed && (t.dueDate === todayStr || t.dueDate === "Today");
+    }).length,
+    upcoming: todos.filter((t) => {
+      const todayStr = new Date().toISOString().split("T")[0];
+      return !t.completed && t.dueDate && t.dueDate !== todayStr && t.dueDate !== "Today";
+    }).length,
     important: todos.filter((t) => !t.completed && t.important).length,
   };
 

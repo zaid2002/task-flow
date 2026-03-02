@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Moon, Sun } from "lucide-react";
+import { CheckCircle2, Moon, Sun, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 
@@ -8,7 +8,11 @@ import { useAuth } from "@/components/auth-context";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-export function TodoHeader() {
+interface TodoHeaderProps {
+  onMenuClick?: () => void;
+}
+
+export function TodoHeader({ onMenuClick }: TodoHeaderProps) {
   const { theme, setTheme } = useTheme();
   const { logOut, user } = useAuth();
   const router = useRouter();
@@ -28,10 +32,21 @@ export function TodoHeader() {
   return (
     <header className="flex items-center justify-between border-b border-border px-6 py-4">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-          <CheckCircle2 className="h-5 w-5 text-primary-foreground" />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onMenuClick}
+          className="h-9 w-9 rounded-lg md:hidden"
+        >
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle menu</span>
+        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+            <CheckCircle2 className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <span className="text-xl font-semibold text-foreground">TaskFlow</span>
         </div>
-        <span className="text-xl font-semibold text-foreground">TaskFlow</span>
       </div>
       <div className="flex items-center gap-3">
         <Button

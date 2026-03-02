@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { TodoHeader } from "@/components/todo/todo-header";
-import { TodoSidebar } from "@/components/todo/todo-sidebar";
+import { TodoSidebar, MobileSidebarContent } from "@/components/todo/todo-sidebar";
 import { TodoList } from "@/components/todo/todo-list";
 import { MobileNav } from "@/components/todo/mobile-nav";
 import { SubtaskView } from "@/components/todo/subtask-view";
+import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 import type { Todo } from "@/components/todo/todo-item";
 import { useAuth } from "@/components/auth-context";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,7 @@ import {
   doc,
   orderBy
 } from "firebase/firestore";
+import { CheckCircle2 } from "lucide-react";
 
 const initialTodos: Todo[] = [
   {
@@ -96,6 +98,7 @@ export default function TodoApp() {
   const [activeCategory, setActiveCategory] = useState("inbox");
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -241,13 +244,18 @@ export default function TodoApp() {
 
   // Filter todos based on category
   const categoryFilteredTodos = todos.filter((todo) => {
+    const todayStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
     switch (activeCategory) {
       case "today":
-        return todo.dueDate === "Today";
+        return todo.dueDate === todayStr || todo.dueDate === "Today"; // Handle old hardcoded value just in case
       case "upcoming":
-        return todo.dueDate && !todo.completed;
+        return todo.dueDate && !todo.completed && todo.dueDate !== todayStr && todo.dueDate !== "Today";
       case "important":
         return todo.important;
+      case "work":
+      case "personal":
+      case "shopping":
+        return todo.tag?.name.toLowerCase() === activeCategory;
       default:
         return true;
     }
@@ -265,13 +273,35 @@ export default function TodoApp() {
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      <TodoHeader />
+      <TodoHeader onMenuClick={() => setIsSidebarOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
         <TodoSidebar
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
           counts={counts}
         />
+
+        <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+          <SheetContent side="left" className="p-4 w-72">
+            <SheetHeader className="mb-4 text-left">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+                  <CheckCircle2 className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <SheetTitle className="text-xl font-semibold">Tags</SheetTitle>
+              </div>
+            </SheetHeader>
+            <MobileSidebarContent
+              activeCategory={activeCategory}
+              onCategoryChange={(category: string) => {
+                setActiveCategory(category);
+                setIsSidebarOpen(false);
+              }}
+              counts={counts}
+            />
+          </SheetContent>
+        </Sheet>
+
         {selectedTodo ? (
           <SubtaskView
             todo={selectedTodo}
